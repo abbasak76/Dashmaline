@@ -1,0 +1,1306 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#1a1224" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f7f4fb" media="(prefers-color-scheme: light)">
+<meta name="description" content="مرکز هوشمند تصمیم‌گیری مالی اخوان — گزارش مدیریتی ۱۴۰۵">
+<title>مرکز هوشمند تصمیم‌گیری مالی | اخوان ۱۴۰۵</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" defer></script>
+<style>
+:root {
+  --ink: #1e1630;
+  --muted: #6b6178;
+  --purple: #4a1a6b;
+  --purple-soft: #7c4d9e;
+  --blue: #4f6eb8;
+  --copper: #c47a3a;
+  --coral: #e85a52;
+  --green: #0d8a6a;
+  --amber: #d4a017;
+  --bg: #f5f2f9;
+  --bg-elevated: #ffffff;
+  --card: rgba(255,255,255,.78);
+  --card-solid: #ffffff;
+  --line: #e6e0ed;
+  --line-strong: #d4cce0;
+  --shadow: 0 8px 30px rgba(40,20,60,.07);
+  --shadow-lg: 0 20px 50px rgba(40,20,60,.12);
+  --radius: 18px;
+  --radius-sm: 12px;
+  --font: 'Vazirmatn', Tahoma, system-ui, sans-serif;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --header-h: 64px;
+  --nav-h: 56px;
+  --transition: .22s cubic-bezier(.4,0,.2,1);
+}
+
+[data-theme="dark"] {
+  --ink: #f0eaf6;
+  --muted: #a89bb5;
+  --purple: #b07cd4;
+  --purple-soft: #9b6bc0;
+  --blue: #7a96d4;
+  --copper: #e0a060;
+  --coral: #f08078;
+  --green: #3cb89a;
+  --amber: #e8c040;
+  --bg: #120e18;
+  --bg-elevated: #1c1626;
+  --card: rgba(32,26,42,.82);
+  --card-solid: #1c1626;
+  --line: #2e2638;
+  --line-strong: #3d344c;
+  --shadow: 0 8px 30px rgba(0,0,0,.35);
+  --shadow-lg: 0 20px 50px rgba(0,0,0,.45);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--font);
+  font-size: 14px;
+  color: var(--ink);
+  background: var(--bg);
+  min-height: 100dvh;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  transition: background var(--transition), color var(--transition);
+}
+button, input, select { font: inherit; color: inherit; }
+button { cursor: pointer; border: 0; background: none; }
+a { color: inherit; }
+
+/* ========== LOADING ========== */
+#boot {
+  position: fixed; inset: 0; z-index: 9999;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  background: linear-gradient(160deg, #1a0f28 0%, #2d1848 50%, #1a1224 100%);
+  color: #f5f0fa;
+  transition: opacity .4s ease, visibility .4s;
+}
+#boot.hide { opacity: 0; visibility: hidden; pointer-events: none; }
+.boot-logo {
+  width: 72px; height: 72px; border-radius: 22px;
+  background: linear-gradient(145deg, #6b2d8e, #3f1052);
+  display: grid; place-items: center;
+  font-weight: 800; font-size: 28px;
+  box-shadow: 0 12px 40px rgba(107,45,142,.5);
+  margin-bottom: 24px;
+  animation: pulse 1.8s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%,100% { transform: scale(1); }
+  50% { transform: scale(1.04); }
+}
+.boot-title { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+.boot-sub { font-size: 13px; opacity: .7; margin-bottom: 28px; }
+.boot-bar {
+  width: min(280px, 70vw); height: 4px; border-radius: 99px;
+  background: rgba(255,255,255,.12); overflow: hidden;
+}
+.boot-bar > i {
+  display: block; height: 100%; width: 0%;
+  background: linear-gradient(90deg, #9b6bc0, #e0a0ff);
+  border-radius: 99px;
+  transition: width .3s ease;
+}
+.boot-status { margin-top: 14px; font-size: 12px; opacity: .55; }
+
+/* ========== SHELL ========== */
+.shell {
+  max-width: 1480px;
+  margin: 0 auto;
+  padding: 0 18px 40px;
+  padding-bottom: calc(40px + var(--safe-bottom));
+}
+
+/* Header */
+.header {
+  position: sticky; top: 0; z-index: 50;
+  backdrop-filter: blur(18px) saturate(1.4);
+  -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  background: color-mix(in srgb, var(--bg) 78%, transparent);
+  border-bottom: 1px solid var(--line);
+  margin: 0 -18px 16px;
+  padding: 12px 18px;
+}
+.header-inner {
+  max-width: 1480px; margin: 0 auto;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+}
+.brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.logo {
+  width: 44px; height: 44px; border-radius: 14px; flex-shrink: 0;
+  background: linear-gradient(145deg, var(--purple), #7c4d9e);
+  color: #fff; display: grid; place-items: center;
+  font-weight: 800; font-size: 18px;
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--purple) 35%, transparent);
+}
+.brand h1 { font-size: 17px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.brand p { font-size: 11px; color: var(--muted); margin-top: 1px; }
+.header-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.icon-btn {
+  width: 40px; height: 40px; border-radius: 12px;
+  display: grid; place-items: center;
+  background: var(--card-solid); border: 1px solid var(--line);
+  color: var(--ink); transition: var(--transition);
+}
+.icon-btn:hover { border-color: var(--purple-soft); color: var(--purple); transform: translateY(-1px); }
+.btn {
+  padding: 9px 14px; border-radius: 12px;
+  background: var(--card-solid); border: 1px solid var(--line);
+  font-weight: 500; font-size: 13px;
+  transition: var(--transition); white-space: nowrap;
+}
+.btn:hover { transform: translateY(-1px); box-shadow: var(--shadow); }
+.btn.primary {
+  background: var(--purple); color: #fff; border-color: var(--purple);
+}
+.btn.primary:hover { filter: brightness(1.08); }
+.btn.ghost { background: transparent; }
+.pill {
+  padding: 7px 12px; border-radius: 99px;
+  background: color-mix(in srgb, var(--purple) 10%, transparent);
+  color: var(--purple); font-size: 12px; font-weight: 600;
+  border: 1px solid color-mix(in srgb, var(--purple) 18%, transparent);
+}
+
+/* Filters */
+.filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+  padding: 14px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(12px);
+  margin-bottom: 14px;
+}
+.field label {
+  display: block; font-size: 11px; font-weight: 500;
+  color: var(--muted); margin-bottom: 5px;
+}
+.field input, .field select {
+  width: 100%; padding: 9px 11px;
+  border: 1px solid var(--line); border-radius: 10px;
+  background: var(--bg-elevated); color: var(--ink);
+  transition: border-color var(--transition);
+  min-width: 0;
+}
+.field input:focus, .field select:focus {
+  outline: none; border-color: var(--purple-soft);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--purple) 15%, transparent);
+}
+
+/* Nav */
+.nav-wrap {
+  position: sticky; top: calc(var(--header-h) - 4px); z-index: 40;
+  margin: 0 -18px 16px; padding: 0 18px;
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter: blur(12px);
+}
+.nav {
+  display: flex; gap: 6px; overflow-x: auto;
+  padding: 6px 0 12px;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.nav::-webkit-scrollbar { display: none; }
+.nav button {
+  flex-shrink: 0; padding: 9px 15px; border-radius: 12px;
+  background: var(--card-solid); border: 1px solid var(--line);
+  color: var(--muted); font-weight: 500; font-size: 13px;
+  transition: var(--transition);
+}
+.nav button:hover { color: var(--ink); border-color: var(--line-strong); }
+.nav button.active {
+  background: var(--purple); color: #fff; border-color: var(--purple);
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--purple) 28%, transparent);
+}
+
+/* Pages */
+.page { display: none; animation: fadeIn .28s ease; }
+.page.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+.section-head {
+  display: flex; justify-content: space-between; align-items: flex-end;
+  gap: 12px; margin: 8px 0 14px; flex-wrap: wrap;
+}
+.section-head h2 { font-size: 18px; font-weight: 700; }
+.section-head p { font-size: 12px; color: var(--muted); margin-top: 3px; max-width: 520px; }
+
+/* KPI */
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+.kpi {
+  position: relative; overflow: hidden;
+  background: var(--card); border: 1px solid var(--line);
+  border-radius: var(--radius); padding: 16px 18px;
+  box-shadow: var(--shadow); backdrop-filter: blur(10px);
+  transition: transform var(--transition), box-shadow var(--transition);
+}
+.kpi:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+.kpi::before {
+  content: ''; position: absolute; top: 0; right: 0; left: 0; height: 3px;
+  background: var(--accent, var(--purple));
+}
+.kpi .label { font-size: 12px; color: var(--muted); font-weight: 500; }
+.kpi .value {
+  font-size: clamp(17px, 2.1vw, 24px); font-weight: 800;
+  margin: 8px 0 4px; letter-spacing: -.02em;
+  overflow-wrap: anywhere;
+}
+.kpi .hint { font-size: 11px; color: var(--muted); }
+
+/* Panels & grids */
+.panel {
+  background: var(--card); border: 1px solid var(--line);
+  border-radius: var(--radius); padding: 16px 18px;
+  box-shadow: var(--shadow); backdrop-filter: blur(10px);
+}
+.panel h3 { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+.sub { font-size: 11px; color: var(--muted); margin-bottom: 12px; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 13px; margin-top: 13px; }
+.grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 13px; }
+.chartwrap { height: 280px; position: relative; }
+.chartwrap.sm { height: 220px; }
+
+/* Tables */
+.tablewrap {
+  overflow: auto; max-height: 480px;
+  border: 1px solid var(--line); border-radius: var(--radius-sm);
+  background: var(--bg-elevated);
+}
+table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 12.5px; white-space: nowrap; }
+th, td { padding: 10px 12px; text-align: right; border-bottom: 1px solid var(--line); }
+th {
+  background: color-mix(in srgb, var(--purple) 6%, var(--bg-elevated));
+  color: var(--muted); font-weight: 700; position: sticky; top: 0; z-index: 1;
+  font-size: 11px; letter-spacing: .01em;
+}
+tbody tr { transition: background .15s; }
+tbody tr:hover { background: color-mix(in srgb, var(--purple) 5%, transparent); }
+td.num { text-align: left; font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; }
+.clickrow { cursor: pointer; }
+.clickrow:active { background: color-mix(in srgb, var(--purple) 10%, transparent); }
+
+/* Badges & notices */
+.badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 8px; border-radius: 8px; font-size: 10px; font-weight: 600;
+  background: color-mix(in srgb, var(--purple) 12%, transparent); color: var(--purple);
+}
+.badge.red { background: color-mix(in srgb, var(--coral) 15%, transparent); color: var(--coral); }
+.badge.amber { background: color-mix(in srgb, var(--amber) 18%, transparent); color: var(--amber); }
+.badge.green { background: color-mix(in srgb, var(--green) 14%, transparent); color: var(--green); }
+.notice {
+  border-radius: 14px; padding: 12px 15px; margin: 10px 0;
+  background: color-mix(in srgb, var(--amber) 10%, var(--card-solid));
+  border: 1px solid color-mix(in srgb, var(--amber) 25%, transparent);
+  color: color-mix(in srgb, var(--amber) 70%, var(--ink));
+  font-size: 13px;
+}
+.notice.red {
+  background: color-mix(in srgb, var(--coral) 10%, var(--card-solid));
+  border-color: color-mix(in srgb, var(--coral) 25%, transparent);
+  color: color-mix(in srgb, var(--coral) 75%, var(--ink));
+}
+.notice.green {
+  background: color-mix(in srgb, var(--green) 10%, var(--card-solid));
+  border-color: color-mix(in srgb, var(--green) 25%, transparent);
+  color: color-mix(in srgb, var(--green) 75%, var(--ink));
+}
+.notice.blue {
+  background: color-mix(in srgb, var(--blue) 10%, var(--card-solid));
+  border-color: color-mix(in srgb, var(--blue) 25%, transparent);
+  color: color-mix(in srgb, var(--blue) 75%, var(--ink));
+}
+
+.empty {
+  padding: 36px 20px; text-align: center; color: var(--muted);
+  font-size: 13px;
+}
+.searchrow {
+  display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px;
+}
+.searchrow input, .searchrow select {
+  border: 1px solid var(--line); border-radius: 10px;
+  padding: 9px 12px; background: var(--bg-elevated); min-width: 0;
+}
+.searchrow input { flex: 1; min-width: 160px; }
+
+.footer {
+  text-align: center; color: var(--muted); font-size: 11px;
+  padding: 28px 0 12px; line-height: 1.6;
+}
+
+/* Modal */
+.drawer {
+  position: fixed; inset: 0; z-index: 100;
+  background: rgba(20,12,30,.55); backdrop-filter: blur(6px);
+  display: none; align-items: center; justify-content: center;
+  padding: 16px;
+}
+.drawer.show { display: flex; animation: fadeIn .2s ease; }
+.modal {
+  background: var(--card-solid); border-radius: 22px;
+  width: min(860px, 100%); max-height: 85dvh; overflow: auto;
+  box-shadow: var(--shadow-lg); border: 1px solid var(--line);
+  padding: 20px;
+}
+.modalhead { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+.modalhead h3 { font-size: 16px; font-weight: 700; }
+.close {
+  padding: 8px 12px; border-radius: 10px;
+  background: color-mix(in srgb, var(--purple) 10%, transparent);
+  color: var(--purple); font-weight: 600;
+}
+
+/* Responsive */
+@media (max-width: 960px) {
+  .kpis { grid-template-columns: repeat(2, 1fr); }
+  .grid2, .grid3 { grid-template-columns: 1fr; }
+  .brand h1 { font-size: 15px; }
+  .header-actions .btn span { display: none; }
+}
+@media (max-width: 560px) {
+  .shell { padding: 0 12px 32px; }
+  .header { margin: 0 -12px 12px; padding: 10px 12px; }
+  .filters { grid-template-columns: 1fr 1fr; padding: 12px; gap: 8px; }
+  .kpis { gap: 8px; }
+  .kpi { padding: 13px; border-radius: 14px; }
+  .kpi .value { font-size: 17px; }
+  .panel { padding: 14px; border-radius: 14px; }
+  .pill { display: none; }
+  .nav-wrap { margin: 0 -12px 12px; padding: 0 12px; }
+}
+
+/* Skeleton */
+.skel {
+  background: linear-gradient(90deg, var(--line) 25%, color-mix(in srgb, var(--line) 50%, var(--bg-elevated)) 50%, var(--line) 75%);
+  background-size: 200% 100%;
+  animation: skel 1.4s ease infinite;
+  border-radius: 8px; height: 14px;
+}
+@keyframes skel { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+</style>
+</head>
+<body>
+<!-- Boot screen -->
+<div id="boot">
+  <div class="boot-logo">A</div>
+  <div class="boot-title">مرکز هوشمند تصمیم‌گیری مالی</div>
+  <div class="boot-sub">در حال آماده‌سازی گزارش‌های ۱۴۰۵ …</div>
+  <div class="boot-bar"><i id="bootBar"></i></div>
+  <div class="boot-status" id="bootStatus">بارگذاری هسته سیستم</div>
+</div>
+
+<div class="shell" id="app" hidden>
+  <header class="header">
+    <div class="header-inner">
+      <div class="brand">
+        <div class="logo">A</div>
+        <div>
+          <h1>مرکز هوشمند تصمیم‌گیری مالی</h1>
+          <p>گزارش مدیریتی ۱۴۰۵ · مبتنی بر ریز اسناد و کدینگ مرجع اخوان</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <span class="pill" title="واحد نمایش">تومان</span>
+        <button class="icon-btn" id="themeBtn" title="حالت تاریک / روشن" aria-label="تغییر تم">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </button>
+        <button class="btn primary" onclick="downloadAudit()">
+          <span>دانلود ممیزی</span> ⬇
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <section class="filters" id="filters">
+    <div class="field">
+      <label>از تاریخ سند</label>
+      <input id="fromDate" placeholder="۱۴۰۵/۰۱/۰۱" value="1405/01/01">
+    </div>
+    <div class="field">
+      <label>تا تاریخ سند</label>
+      <input id="toDate" placeholder="۱۴۰۵/۰۷/۳۰" value="1405/07/30">
+    </div>
+    <div class="field">
+      <label>گروه حساب</label>
+      <select id="groupFilter"><option value="">همه گروه‌ها</option></select>
+    </div>
+    <div class="field">
+      <label>نوع ردیف</label>
+      <select id="rowFilter">
+        <option value="all">همه ردیف‌ها</option>
+        <option value="opening">سند افتتاحیه</option>
+        <option value="period">گردش دوره</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>جست‌وجوی حساب / شرح / کد</label>
+      <input id="search" placeholder="مثلاً 121001 یا جاری شرکا">
+    </div>
+    <div class="field">
+      <label>دوره سریع</label>
+      <select id="quick">
+        <option value="custom">بازه انتخابی</option>
+        <option value="all">کل داده‌ها</option>
+        <option value="m1">ماه اول داده</option>
+        <option value="m3">۳ ماه اخیر داده</option>
+        <option value="m6">۶ ماه اخیر داده</option>
+        <option value="ytd">از ابتدای سال تا آخرین تاریخ</option>
+      </select>
+    </div>
+  </section>
+
+  <div class="nav-wrap">
+    <nav class="nav" id="nav" role="tablist">
+      <button class="active" data-page="overview">خلاصه مدیریتی</button>
+      <button data-page="pl">درآمد و هزینه</button>
+      <button data-page="balance">ترازنامه</button>
+      <button data-page="partners">جاری شرکا</button>
+      <button data-page="cash">بانک و وام</button>
+      <button data-page="checks">چک‌ها</button>
+      <button data-page="audit">ممیزی و خطاها</button>
+      <button data-page="accounts">ریز حساب‌ها</button>
+    </nav>
+  </div>
+
+  <main>
+    <!-- Overview -->
+    <section class="page active" id="overview">
+      <div class="section-head">
+        <div>
+          <h2>نمای کلی وضعیت مالی</h2>
+          <p>برای دیدن جزئیات روی ستون‌ها و ردیف‌ها کلیک کنید. فیلتر نمودار، جداول را هم محدود می‌کند.</p>
+        </div>
+        <button class="btn ghost" onclick="resetChartFilter()">پاک کردن فیلتر نمودار</button>
+      </div>
+      <div class="kpis" id="kpis"></div>
+      <div class="grid2">
+        <div class="panel">
+          <h3>گردش ماهانه بدهکار و بستانکار</h3>
+          <div class="sub">روی ماه کلیک کنید تا فقط همان ماه نمایش داده شود</div>
+          <div class="chartwrap"><canvas id="monthly"></canvas></div>
+        </div>
+        <div class="panel">
+          <h3>ترکیب گردش بر اساس گروه کدینگ</h3>
+          <div class="sub">میزان گردش (نه سودآوری). کلیک روی میله گروه را فیلتر می‌کند</div>
+          <div class="chartwrap"><canvas id="groups"></canvas></div>
+        </div>
+      </div>
+      <div class="grid2">
+        <div class="panel">
+          <h3>حساب‌های با بیشترین گردش</h3>
+          <div class="sub">کلیک روی ردیف → جزئیات</div>
+          <div id="topAccounts"></div>
+        </div>
+        <div class="panel">
+          <h3>نکات مدیریتی فوری</h3>
+          <div id="alerts"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- P&L -->
+    <section class="page" id="pl">
+      <div class="section-head">
+        <div>
+          <h2>درآمد، خرید و هزینه</h2>
+          <p>گروه‌های ۶، ۷ و ۸ طبق کدینگ مرجع. ارقام گردش هستند؛ سود خالص فقط با بهای تمام‌شده قابل تأیید است.</p>
+        </div>
+      </div>
+      <div class="kpis" id="plKpis"></div>
+      <div class="grid2">
+        <div class="panel">
+          <h3>گردش گروه‌های عملکردی</h3>
+          <div class="chartwrap"><canvas id="plChart"></canvas></div>
+        </div>
+        <div class="panel">
+          <h3>فرمول سود و زیان</h3>
+          <div class="notice">سود ناخالص = فروش خالص − بهای تمام‌شده کالای فروش‌رفته</div>
+          <div class="notice">بهای تمام‌شده = موجودی اول + خرید خالص + هزینه مستقیم − موجودی پایان</div>
+          <div class="notice red">وام دریافتی درآمد نیست · اصل بازپرداخت وام هزینه جاری نیست · برداشت شریک هزینه عملیاتی محسوب نمی‌شود</div>
+          <div id="plNotes"></div>
+        </div>
+      </div>
+      <div class="panel" style="margin-top:13px">
+        <h3>ریز گردش درآمد و هزینه</h3>
+        <div id="plTable"></div>
+      </div>
+    </section>
+
+    <!-- Balance -->
+    <section class="page" id="balance">
+      <div class="section-head">
+        <div>
+          <h2>ترازنامه و سرمایه در گردش</h2>
+          <p>مانده هر معین = جمع بدهکار − جمع بستانکار؛ تجمیع تا کل و گروه با کدینگ مرجع.</p>
+        </div>
+      </div>
+      <div class="kpis" id="balKpis"></div>
+      <div class="notice blue">موجودی فعلی انبار (اعلام مدیریت): <b>۱۲ میلیارد تومان</b> — این رقم جدا از مانده دفتری است و تا تطبیق جایگزین حسابداری نمی‌شود.</div>
+      <div class="grid2">
+        <div class="panel">
+          <h3>مانده گروه‌های ترازنامه</h3>
+          <div class="chartwrap"><canvas id="balChart"></canvas></div>
+        </div>
+        <div class="panel">
+          <h3>کنترل معادله ترازنامه</h3>
+          <div id="balanceCheck"></div>
+        </div>
+      </div>
+      <div class="panel" style="margin-top:13px">
+        <h3>تجمیع حساب‌های ترازنامه</h3>
+        <div id="balTable"></div>
+      </div>
+    </section>
+
+    <!-- Partners -->
+    <section class="page" id="partners">
+      <div class="section-head">
+        <div>
+          <h2>جاری شرکا، برداشت و حساب اشخاص</h2>
+          <p>بر اساس کدهای جاری/برداشت و نام تفصیلی. موارد نیازمند تشخیص مالکیت جدا علامت می‌خورند.</p>
+        </div>
+      </div>
+      <div class="kpis" id="partnerKpis"></div>
+      <div class="grid2">
+        <div class="panel">
+          <h3>مانده حساب‌های جاری و برداشت</h3>
+          <div id="partnerTable"></div>
+        </div>
+        <div class="panel">
+          <h3>شرح‌های نیازمند بازبینی</h3>
+          <div id="partnerAlerts"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Cash -->
+    <section class="page" id="cash">
+      <div class="section-head">
+        <div>
+          <h2>بانک، صندوق، مطالبات و تسهیلات</h2>
+          <p>مانده دفتری الزاماً معادل مانده تأییدشده بانک نیست.</p>
+        </div>
+      </div>
+      <div class="kpis" id="cashKpis"></div>
+      <div class="grid2">
+        <div class="panel">
+          <h3>بانک و صندوق به تفکیک معین</h3>
+          <div id="bankTable"></div>
+        </div>
+        <div class="panel">
+          <h3>مطالبات، پیش‌پرداخت و تسهیلات</h3>
+          <div id="receivableTable"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Checks -->
+    <section class="page" id="checks">
+      <div class="section-head">
+        <div>
+          <h2>چک‌های پرداختنی، دریافتنی و تضامین</h2>
+          <p>تفکیک اولیه با کدینگ و متن شرح؛ تشخیص نهایی نیازمند تطبیق چرخه چک است.</p>
+        </div>
+        <button class="btn" onclick="downloadChecks()">دانلود فهرست چک‌ها CSV</button>
+      </div>
+      <div class="kpis" id="checkKpis"></div>
+      <div class="grid2">
+        <div class="panel">
+          <h3>چک‌های پرداختنی / بدهی</h3>
+          <div id="payChecks"></div>
+        </div>
+        <div class="panel">
+          <h3>چک‌های دریافتنی / مطالبات</h3>
+          <div id="recvChecks"></div>
+        </div>
+      </div>
+      <div class="panel" style="margin-top:13px">
+        <h3>ردیف‌های دارای نشانه ضمانت یا ابطال</h3>
+        <div id="guaranteeTable"></div>
+      </div>
+    </section>
+
+    <!-- Audit -->
+    <section class="page" id="audit">
+      <div class="section-head">
+        <div>
+          <h2>مرکز خطاها، نواقص و ممیزی</h2>
+          <p>موارد زیر پرچم بررسی هستند، نه حکم قطعی خطا. داده اصلی دست‌نخورده باقی می‌ماند.</p>
+        </div>
+        <button class="btn primary" onclick="downloadAudit()">دانلود فایل اکسل ممیزی</button>
+      </div>
+      <div class="kpis" id="auditKpis"></div>
+      <div class="grid2">
+        <div class="panel">
+          <h3>کدهای معین خارج از کدینگ مرجع</h3>
+          <div id="invalidCodes"></div>
+        </div>
+        <div class="panel">
+          <h3>کنترل کیفیت ساختار فایل</h3>
+          <div id="fileQuality"></div>
+        </div>
+      </div>
+      <div class="panel" style="margin-top:13px">
+        <h3>همه ردیف‌های نیازمند بررسی</h3>
+        <div class="searchrow">
+          <input id="auditSearch" placeholder="جست‌وجوی کد، شرح، شماره ردیف">
+          <select id="severity">
+            <option value="all">همه سطح‌ها</option>
+            <option value="critical">بحرانی</option>
+            <option value="high">بالا</option>
+            <option value="medium">متوسط</option>
+          </select>
+        </div>
+        <div id="auditTable"></div>
+      </div>
+    </section>
+
+    <!-- Accounts -->
+    <section class="page" id="accounts">
+      <div class="section-head">
+        <div>
+          <h2>تجمیع حساب‌ها و ریز گردش</h2>
+          <p>مانده‌ها از ردیف‌های معتبر ۲۸ ستونی استخراج شده‌اند.</p>
+        </div>
+        <button class="btn" onclick="downloadAccounts()">دانلود تجمیع حساب‌ها</button>
+      </div>
+      <div class="searchrow">
+        <input id="accountSearch" placeholder="جست‌وجوی نام یا کد حساب">
+        <select id="accountSort">
+          <option value="abs">بیشترین قدرمطلق مانده</option>
+          <option value="debit">بیشترین بدهکار</option>
+          <option value="credit">بیشترین بستانکار</option>
+          <option value="code">کد حساب</option>
+        </select>
+      </div>
+      <div class="panel">
+        <div id="accountTable"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    مبنای محاسبه: ریز اسناد حسابداری + کدینگ مرجع · مبالغ ریالی بر ۱۰ تقسیم و به تومان نمایش داده می‌شوند<br>
+    سند اصلی تغییر داده نشده است · نسخه داشبورد ۱۴۰۵ · طراحی‌شده برای تصمیم‌گیری مدیریتی
+  </footer>
+</div>
+
+<!-- Modal -->
+<div class="drawer" id="drawer" onclick="if(event.target.id==='drawer')closeModal()">
+  <div class="modal">
+    <div class="modalhead">
+      <h3 id="modalTitle">جزئیات ردیف‌ها</h3>
+      <button class="close" onclick="closeModal()">بستن ✕</button>
+    </div>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<script>
+/* ========== Boot & Data Loading ========== */
+const bootBar = document.getElementById('bootBar');
+const bootStatus = document.getElementById('bootStatus');
+function setBoot(p, msg) {
+  bootBar.style.width = p + '%';
+  if (msg) bootStatus.textContent = msg;
+}
+
+const SCRIPTS = [
+  { src: 'meta.js', label: 'فراداده' },
+  { src: 'coding.js', label: 'کدینگ مرجع' },
+  { src: 'bad.js', label: 'ردیف‌های ساختاری' },
+  { src: 'data.js', label: 'ریز اسناد (حجم بالا)' }
+];
+
+function loadScript(src) {
+  return new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = src;
+    s.onload = resolve;
+    s.onerror = () => reject(new Error('بارگذاری ناموفق: ' + src));
+    document.head.appendChild(s);
+  });
+}
+
+async function boot() {
+  try {
+    for (let i = 0; i < SCRIPTS.length; i++) {
+      const { src, label } = SCRIPTS[i];
+      setBoot(8 + (i / SCRIPTS.length) * 55, 'بارگذاری ' + label + '…');
+      await loadScript(src);
+    }
+    setBoot(70, 'تبدیل و آماده‌سازی داده‌ها…');
+    await new Promise(r => setTimeout(r, 40));
+
+    if (!window.RAW_DATA || !window.CODING || !window.META) {
+      throw new Error('داده‌های ضروری بارگذاری نشدند');
+    }
+
+    window.DATA = window.RAW_DATA.map(a => ({
+      row: a[0], code: String(a[1]), group: String(a[2]), groupName: a[3],
+      general: a[4], generalName: a[5], account: a[6], detail: a[7] || '',
+      debit: Number(a[8]) || 0, credit: Number(a[9]) || 0,
+      date: a[10], eventDate: a[11], desc: a[12] || '',
+      kind: a[13], inx: a[14], doc: a[15], nature: a[16],
+      opening: !!a[17]
+    }));
+    delete window.RAW_DATA;
+
+    setBoot(88, 'راه‌اندازی رابط کاربری…');
+    initApp();
+    setBoot(100, 'آماده');
+    setTimeout(() => {
+      document.getElementById('boot').classList.add('hide');
+      document.getElementById('app').hidden = false;
+    }, 280);
+  } catch (err) {
+    bootStatus.textContent = 'خطا: ' + err.message;
+    bootStatus.style.color = '#f08078';
+    console.error(err);
+  }
+}
+
+/* ========== App Core ========== */
+let chartFilterGroup = '', chartFilterMonth = '';
+let charts = {};
+let ISSUES = [];
+
+const fmt = n => Math.round(Number(n) || 0).toLocaleString('fa-IR');
+const toman = n => fmt((Number(n) || 0) / 10);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c =>
+  ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+function byCode(code) {
+  return (window.CODING || []).some(c => (c['معین'] || '').trim() === String(code).trim());
+}
+
+function dateOK(d) { return /^\d{4}\/\d{2}\/\d{2}$/.test(d); }
+
+function filtered() {
+  const a = document.getElementById('fromDate').value.trim();
+  const b = document.getElementById('toDate').value.trim();
+  const g = document.getElementById('groupFilter').value;
+  const q = document.getElementById('search').value.trim().toLowerCase();
+  const rf = document.getElementById('rowFilter').value;
+  return DATA.filter(x =>
+    (!dateOK(a) || !dateOK(x.date) || x.date >= a) &&
+    (!dateOK(b) || !dateOK(x.date) || x.date <= b) &&
+    (!g || x.group === g) &&
+    (!chartFilterGroup || x.group === chartFilterGroup) &&
+    (!chartFilterMonth || (x.date && x.date.startsWith(chartFilterMonth))) &&
+    (!q || (x.code + ' ' + x.account + ' ' + x.generalName + ' ' + x.desc + ' ' + x.detail).toLowerCase().includes(q)) &&
+    (rf === 'all' || (rf === 'opening' ? x.opening : !x.opening))
+  );
+}
+
+function agg(rows, keyFn) {
+  const m = new Map();
+  rows.forEach(x => {
+    const k = keyFn(x) || 'نامشخص';
+    if (!m.has(k)) m.set(k, { key: k, n: 0, debit: 0, credit: 0, net: 0, rows: [] });
+    const a = m.get(k);
+    a.n++; a.debit += x.debit; a.credit += x.credit; a.net += x.debit - x.credit; a.rows.push(x);
+  });
+  return [...m.values()];
+}
+
+function table(data, cols, opts = {}) {
+  if (!data.length) return '<div class="empty">داده‌ای برای این فیلتر وجود ندارد.</div>';
+  return '<div class="tablewrap"><table><thead><tr>' +
+    cols.map(c => '<th>' + c.label + '</th>').join('') +
+    '</tr></thead><tbody>' +
+    data.map((r, i) => {
+      const click = opts.click ? ` class="clickrow" onclick="showRows('${encodeURIComponent(opts.click(r)).replace(/'/g, '%27')}')"` : '';
+      return '<tr' + click + '>' + cols.map(c =>
+        `<td class="${c.num ? 'num' : ''}">${c.val ? c.val(r, i) : esc(r[c.key] ?? '')}</td>`
+      ).join('') + '</tr>';
+    }).join('') +
+    '</tbody></table></div>';
+}
+
+function kpi(el, items) {
+  document.getElementById(el).innerHTML = items.map(x =>
+    `<div class="kpi" style="--accent:${x.color || 'var(--purple)'}">
+      <div class="label">${x.label}</div>
+      <div class="value">${x.value}</div>
+      <div class="hint">${x.hint || ''}</div>
+    </div>`
+  ).join('');
+}
+
+function chart(id, type, data, options = {}) {
+  if (charts[id]) charts[id].destroy();
+  const ctx = document.getElementById(id);
+  if (!ctx || typeof Chart === 'undefined') return;
+  charts[id] = new Chart(ctx, {
+    type,
+    data,
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { labels: { font: { family: 'Vazirmatn', size: 11 } } },
+        tooltip: {
+          bodyFont: { family: 'Vazirmatn' },
+          titleFont: { family: 'Vazirmatn' },
+          callbacks: { label: c => `${c.dataset.label || c.label}: ${toman(c.raw)} تومان` }
+        }
+      },
+      scales: (type === 'bar' || type === 'line') ? {
+        x: { ticks: { font: { family: 'Vazirmatn', size: 10 } }, grid: { display: false } },
+        y: { ticks: { font: { family: 'Vazirmatn', size: 10 }, callback: v => toman(v) }, grid: { color: 'rgba(128,100,150,.08)' } }
+      } : undefined,
+      ...options
+    }
+  });
+}
+
+function goPage(id) {
+  document.querySelectorAll('.page').forEach(x => x.classList.toggle('active', x.id === id));
+  document.querySelectorAll('#nav button').forEach(x => x.classList.toggle('active', x.dataset.page === id));
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function showRows(encoded) {
+  const code = decodeURIComponent(encoded);
+  const r = filtered().filter(x => x.code === code);
+  document.getElementById('modalTitle').textContent = 'ریز گردش حساب ' + code;
+  document.getElementById('modalBody').innerHTML = table(r.slice(0, 500), [
+    { label: 'ردیف منبع', num: true, val: x => fmt(x.row) },
+    { label: 'تاریخ', key: 'date' },
+    { label: 'شرح', key: 'desc' },
+    { label: 'بدهکار', num: true, val: x => toman(x.debit) },
+    { label: 'بستانکار', num: true, val: x => toman(x.credit) },
+    { label: 'Kind', key: 'kind' }
+  ]);
+  document.getElementById('drawer').classList.add('show');
+}
+function closeModal() { document.getElementById('drawer').classList.remove('show'); }
+
+function resetChartFilter() {
+  chartFilterGroup = '';
+  chartFilterMonth = '';
+  document.getElementById('groupFilter').value = '';
+  render();
+}
+
+/* ========== Render ========== */
+function render() {
+  const r = filtered();
+  const de = r.reduce((s, x) => s + x.debit, 0);
+  const cr = r.reduce((s, x) => s + x.credit, 0);
+  const net = de - cr;
+
+  let ac = agg(r, x => x.code + '|' + x.account).map(a => ({
+    ...a, code: a.key.split('|')[0], account: a.key.split('|').slice(1).join('|')
+  }));
+  let gr = agg(r, x => x.group + '|' + x.groupName).map(a => ({
+    ...a, group: a.key.split('|')[0], name: a.key.split('|').slice(1).join('|')
+  }));
+
+  // Overview KPIs
+  kpi('kpis', [
+    { label: 'جمع گردش بدهکار', value: toman(de), hint: 'تومان · در بازه فیلترشده', color: 'var(--blue)' },
+    { label: 'جمع گردش بستانکار', value: toman(cr), hint: 'تومان · در بازه فیلترشده', color: 'var(--copper)' },
+    { label: 'اختلاف گردش بدهکار − بستانکار', value: toman(net), hint: 'این عدد به‌تنهایی سود یا زیان نیست', color: Math.abs(net) > 0 ? 'var(--coral)' : 'var(--green)' },
+    { label: 'موجودی فعلی انبار (اعلام مدیریت)', value: toman(META.inventory * 10), hint: '۱۲ میلیارد تومان؛ نیازمند تطبیق دفتری', color: 'var(--green)' }
+  ]);
+
+  // Monthly chart
+  const months = agg(r.filter(x => dateOK(x.date)), x => x.date.slice(0, 7)).sort((a, b) => a.key.localeCompare(b.key));
+  chart('monthly', 'bar', {
+    labels: months.map(x => x.key),
+    datasets: [
+      { label: 'بدهکار', data: months.map(x => x.debit), backgroundColor: '#4f6eb8', borderRadius: 6 },
+      { label: 'بستانکار', data: months.map(x => x.credit), backgroundColor: '#c47a3a', borderRadius: 6 }
+    ]
+  }, {
+    onClick: (e, els) => { if (els.length) { chartFilterMonth = months[els[0].index].key; render(); } }
+  });
+
+  // Groups chart
+  gr.sort((a, b) => (b.debit + b.credit) - (a.debit + a.credit));
+  chart('groups', 'bar', {
+    labels: gr.map(x => x.group + ' · ' + x.name),
+    datasets: [{
+      label: 'گردش کل',
+      data: gr.map(x => x.debit + x.credit),
+      backgroundColor: ['#4a1a6b', '#4f6eb8', '#c47a3a', '#e85a52', '#0d8a6a', '#9b6bc0', '#7a96d4', '#d8a66d', '#cf918b'],
+      borderRadius: 7
+    }]
+  }, {
+    indexAxis: 'y',
+    onClick: (e, els) => {
+      if (els.length) {
+        chartFilterGroup = gr[els[0].index].group;
+        document.getElementById('groupFilter').value = chartFilterGroup;
+        render();
+      }
+    }
+  });
+
+  document.getElementById('topAccounts').innerHTML = table(
+    ac.sort((a, b) => (b.debit + b.credit) - (a.debit + a.credit)).slice(0, 12),
+    [
+      { label: 'کد معین', key: 'code' },
+      { label: 'حساب', key: 'account' },
+      { label: 'بدهکار (تومان)', num: true, val: x => toman(x.debit) },
+      { label: 'بستانکار (تومان)', num: true, val: x => toman(x.credit) },
+      { label: 'مانده خالص', num: true, val: x => toman(x.net) }
+    ],
+    { click: x => x.code }
+  );
+
+  const unmap = ac.filter(x => !byCode(x.code));
+  document.getElementById('alerts').innerHTML = `
+    <div class="notice ${Math.abs(net) > 0 ? 'red' : 'green'}"><b>اختلاف گردش:</b> ${toman(net)} تومان. پیش از نتیجه‌گیری، ردیف‌های ناقص و دامنه گزارش بررسی شوند.</div>
+    <div class="notice"><b>ردیف‌های ساختار غیر ۲۸ ستونی:</b> ${fmt(META.bad)} ردیف؛ جداگانه در ممیزی فهرست شده‌اند.</div>
+    <div class="notice"><b>کدهای معین بدون تطبیق دقیق:</b> ${fmt(unmap.length)} کد در بازه فعلی.</div>
+    <div class="notice green"><b>مانده حساب‌ها:</b> مانده هر معین از بدهکار منهای بستانکار محاسبه شده و با کدینگ به گروه متصل است.</div>
+  `;
+
+  // P&L
+  const pl = gr.filter(x => ['6', '7', '8'].includes(x.group));
+  kpi('plKpis', [
+    { label: 'گردش خرید و خدمات (گروه ۶)', value: toman(pl.filter(x => x.group === '6').reduce((s, x) => s + x.debit + x.credit, 0)), color: 'var(--copper)' },
+    { label: 'گردش فروش و درآمد (گروه ۷)', value: toman(pl.filter(x => x.group === '7').reduce((s, x) => s + x.debit + x.credit, 0)), color: 'var(--green)' },
+    { label: 'گردش هزینه‌ها (گروه ۸)', value: toman(pl.filter(x => x.group === '8').reduce((s, x) => s + x.debit + x.credit, 0)), color: 'var(--coral)' },
+    { label: 'سود خالص قطعی', value: 'نیازمند بستن حساب‌ها', hint: 'گردش به‌تنهایی سود قطعی نیست', color: 'var(--purple)' }
+  ]);
+  chart('plChart', 'bar', {
+    labels: pl.map(x => x.group + ' · ' + x.name),
+    datasets: [
+      { label: 'بدهکار', data: pl.map(x => x.debit), backgroundColor: '#4f6eb8' },
+      { label: 'بستانکار', data: pl.map(x => x.credit), backgroundColor: '#c47a3a' }
+    ]
+  }, { indexAxis: 'y' });
+  document.getElementById('plTable').innerHTML = table(pl, [
+    { label: 'گروه', key: 'group' },
+    { label: 'عنوان گروه', key: 'name' },
+    { label: 'تعداد ردیف', num: true, val: x => fmt(x.n) },
+    { label: 'بدهکار', num: true, val: x => toman(x.debit) },
+    { label: 'بستانکار', num: true, val: x => toman(x.credit) },
+    { label: 'خالص بدهکار', num: true, val: x => toman(x.net) }
+  ]);
+  document.getElementById('plNotes').innerHTML = '<p style="font-size:12px;color:var(--muted);margin-top:10px">سند افتتاحیه از گردش دوره قابل فیلتر است. برای سود خالص قطعی، فروش خالص، برگشت و تخفیف، بهای تمام‌شده و هزینه‌های دوره باید در پایان دوره با حساب‌های موقت تطبیق داده شوند.</p>';
+
+  // Balance
+  const bal = gr.filter(x => ['1', '2', '3', '4', '5', '9'].includes(x.group));
+  const assets = bal.filter(x => ['1', '2', '3'].includes(x.group)).reduce((s, x) => s + x.net, 0);
+  const liab = bal.filter(x => x.group === '4').reduce((s, x) => s - x.net, 0);
+  const equity = bal.filter(x => x.group === '5').reduce((s, x) => s - x.net, 0);
+  kpi('balKpis', [
+    { label: 'دارایی‌ها (مانده خالص گروه ۱ تا ۳)', value: toman(assets), hint: 'بر اساس مانده دفتری', color: 'var(--blue)' },
+    { label: 'بدهی جاری (گروه ۴)', value: toman(liab), hint: 'جهت مانده بر اساس بدهکار−بستانکار', color: 'var(--coral)' },
+    { label: 'حقوق صاحبان سهام (گروه ۵)', value: toman(equity), hint: 'مانده خالص با علامت متعارف', color: 'var(--copper)' },
+    { label: 'موجودی انبار اعلام مدیریت', value: '۱۲ میلیارد', hint: 'جدا از مانده دفتری تا تطبیق', color: 'var(--green)' }
+  ]);
+  chart('balChart', 'bar', {
+    labels: bal.map(x => x.group + ' · ' + x.name),
+    datasets: [{ label: 'مانده خالص (تومان)', data: bal.map(x => x.net / 10), backgroundColor: '#4f6eb8', borderRadius: 6 }]
+  }, { indexAxis: 'y' });
+  document.getElementById('balanceCheck').innerHTML = `
+    <div class="notice">دارایی دفتری تجمیعی: <b>${toman(assets)}</b> تومان</div>
+    <div class="notice">بدهی + حقوق مالکانه: <b>${toman(liab + equity)}</b> تومان</div>
+    <div class="notice red">اختلاف کنترلی تقریبی: <b>${toman(assets - liab - equity)}</b> تومان. تا تعیین مانده افتتاحیه، حساب‌های انتظامی و موقت، صورت مالی نهایی محسوب نمی‌شود.</div>
+  `;
+  document.getElementById('balTable').innerHTML = table(bal, [
+    { label: 'گروه', key: 'group' },
+    { label: 'عنوان', key: 'name' },
+    { label: 'بدهکار', num: true, val: x => toman(x.debit) },
+    { label: 'بستانکار', num: true, val: x => toman(x.credit) },
+    { label: 'مانده خالص', num: true, val: x => toman(x.net) }
+  ]);
+
+  // Partners
+  const partners = ac.filter(x => /^12[1]/.test(x.code) || /^53/.test(x.code) || /جاری شرکا|برداشت سرمایه/.test(x.account + ' ' + x.generalName));
+  kpi('partnerKpis', [
+    { label: 'تعداد حساب‌های جاری/برداشت', value: fmt(partners.length), color: 'var(--purple)' },
+    { label: 'مانده خالص بدهکار', value: toman(partners.reduce((s, x) => s + Math.max(0, x.net), 0)), color: 'var(--blue)' },
+    { label: 'مانده خالص بستانکار', value: toman(partners.reduce((s, x) => s + Math.max(0, -x.net), 0)), color: 'var(--copper)' },
+    { label: 'تراکنش‌های دارای شرح ساخت‌وساز/قبوض', value: fmt(r.filter(x => /^53/.test(x.code) && /ساختمان|قبض|آب|برق|پلاک|ساخت/.test(x.desc)).length), color: 'var(--coral)' }
+  ]);
+  document.getElementById('partnerTable').innerHTML = table(partners, [
+    { label: 'کد', key: 'code' },
+    { label: 'حساب', key: 'account' },
+    { label: 'تعداد', num: true, val: x => fmt(x.n) },
+    { label: 'بدهکار', num: true, val: x => toman(x.debit) },
+    { label: 'بستانکار', num: true, val: x => toman(x.credit) },
+    { label: 'مانده', num: true, val: x => toman(x.net) }
+  ], { click: x => x.code });
+  const pa = r.filter(x => /^53/.test(x.code) && /ساختمان|قبض|آب|برق|پلاک|ساخت|بیمه|کارمزد/.test(x.desc));
+  document.getElementById('partnerAlerts').innerHTML = table(pa.slice(0, 80), [
+    { label: 'تاریخ', key: 'date' },
+    { label: 'کد', key: 'code' },
+    { label: 'شرح', key: 'desc' },
+    { label: 'بدهکار', num: true, val: x => toman(x.debit) },
+    { label: 'بستانکار', num: true, val: x => toman(x.credit) }
+  ]);
+
+  // Cash
+  const bank = ac.filter(x => /^11000[1235]$/.test(x.code) || /بانک|صندوق|تنخواه/.test(x.account));
+  const loan = ac.filter(x => /^43/.test(x.code) || /وام|تسهیلات|خرید دین/.test(x.account));
+  const recv = ac.filter(x => /^100|^115|^12[01]|^151/.test(x.code));
+  kpi('cashKpis', [
+    { label: 'مانده دفتری بانک/صندوق/تنخواه', value: toman(bank.reduce((s, x) => s + x.net, 0)), color: 'var(--blue)' },
+    { label: 'مانده خالص وام/تسهیلات', value: toman(loan.reduce((s, x) => s + x.net, 0)), color: 'var(--coral)' },
+    { label: 'مانده خالص مطالبات/پیش‌پرداخت', value: toman(recv.reduce((s, x) => s + x.net, 0)), color: 'var(--green)' },
+    { label: 'حساب‌های بانکی/نقدی', value: fmt(bank.length), color: 'var(--copper)' }
+  ]);
+  document.getElementById('bankTable').innerHTML = table(bank, [
+    { label: 'کد', key: 'code' },
+    { label: 'حساب', key: 'account' },
+    { label: 'بدهکار', num: true, val: x => toman(x.debit) },
+    { label: 'بستانکار', num: true, val: x => toman(x.credit) },
+    { label: 'مانده دفتری', num: true, val: x => toman(x.net) }
+  ], { click: x => x.code });
+  document.getElementById('receivableTable').innerHTML = table(
+    [...loan, ...recv].sort((a, b) => Math.abs(b.net) - Math.abs(a.net)),
+    [
+      { label: 'کد', key: 'code' },
+      { label: 'حساب', key: 'account' },
+      { label: 'بدهکار', num: true, val: x => toman(x.debit) },
+      { label: 'بستانکار', num: true, val: x => toman(x.credit) },
+      { label: 'مانده', num: true, val: x => toman(x.net) }
+    ],
+    { click: x => x.code }
+  );
+
+  // Checks
+  const checks = r.filter(x =>
+    /چک|سفته|ضمانت|ابطال|واخواست|در جریان وصول|اسناد پرداختنی|اسناد دریافتنی/.test(x.account + ' ' + x.generalName + ' ' + x.desc) ||
+    /^120|^410|^411/.test(x.code)
+  );
+  const pay = checks.filter(x => /^4[01]/.test(x.code) || /پرداختنی|چک پرداختی/.test(x.account + ' ' + x.desc));
+  const get = checks.filter(x => /^12[0]/.test(x.code) || /دریافتنی|چک دریافتی|وصول/.test(x.account + ' ' + x.desc));
+  const guar = checks.filter(x => /ضمانت|تضمین|ابطال|باطل/.test(x.desc + ' ' + x.account));
+  kpi('checkKpis', [
+    { label: 'ردیف‌های مرتبط با چک/اسناد', value: fmt(checks.length), color: 'var(--blue)' },
+    { label: 'چک پرداختنی/بدهی', value: fmt(pay.length), color: 'var(--coral)' },
+    { label: 'چک دریافتنی/مطالبات', value: fmt(get.length), color: 'var(--green)' },
+    { label: 'نشانه ضمانت/ابطال', value: fmt(guar.length), color: 'var(--copper)' }
+  ]);
+  const cc = [
+    { label: 'تاریخ', key: 'date' },
+    { label: 'کد', key: 'code' },
+    { label: 'حساب', key: 'account' },
+    { label: 'شرح', key: 'desc' },
+    { label: 'بدهکار', num: true, val: x => toman(x.debit) },
+    { label: 'بستانکار', num: true, val: x => toman(x.credit) }
+  ];
+  document.getElementById('payChecks').innerHTML = table(pay.slice(0, 250), cc);
+  document.getElementById('recvChecks').innerHTML = table(get.slice(0, 250), cc);
+  document.getElementById('guaranteeTable').innerHTML = table(guar.slice(0, 400), cc);
+
+  // Audit
+  const invalid = agg(r.filter(x => !byCode(x.code)), x => x.code + '|' + x.account).map(x => ({
+    ...x, code: x.key.split('|')[0], account: x.key.split('|').slice(1).join('|')
+  }));
+  kpi('auditKpis', [
+    { label: 'ردیف معتبر ۲۸ ستونی', value: fmt(META.valid), color: 'var(--green)' },
+    { label: 'ردیف‌های ساختار متفاوت', value: fmt(META.bad), color: 'var(--coral)' },
+    { label: 'کدهای معین بدون تطبیق', value: fmt(invalid.length), color: 'var(--copper)' },
+    { label: 'نشانه چک/ابطال', value: fmt(guar.length), color: 'var(--blue)' }
+  ]);
+  document.getElementById('invalidCodes').innerHTML = table(invalid, [
+    { label: 'کد', key: 'code' },
+    { label: 'نام حساب', key: 'account' },
+    { label: 'تعداد', num: true, val: x => fmt(x.n) },
+    { label: 'بدهکار', num: true, val: x => toman(x.debit) },
+    { label: 'بستانکار', num: true, val: x => toman(x.credit) }
+  ]);
+  document.getElementById('fileQuality').innerHTML = `
+    <div class="notice green">۴۸٬۵۹۸ ردیف با ساختار ۲۸ ستونی پردازش شد.</div>
+    <div class="notice red">${fmt(META.bad)} ردیف با تعداد ستون متفاوت کنار گذاشته شده‌اند.</div>
+    <div class="notice">جمع بدهکار ${toman(META.debit)} تومان · جمع بستانکار ${toman(META.credit)} تومان · اختلاف کل ${toman(META.diff)} تومان.</div>
+    <div class="notice blue">شناسه inx به‌تنهایی معیار تکراری بودن تلقی نشده است.</div>
+  `;
+
+  ISSUES = [];
+  invalid.forEach(x => ISSUES.push({ ...x, level: 'high', reason: 'کد معین در کدینگ مرجع تطابق دقیق ندارد' }));
+  guar.forEach(x => ISSUES.push({
+    ...x, level: /ابطال|باطل/.test(x.desc) ? 'critical' : 'medium',
+    reason: 'شرح دارای نشانه ضمانت/ابطال؛ نیازمند تطبیق چرخه و سند معکوس'
+  }));
+  (window.BAD || []).forEach(x => ISSUES.push({
+    code: '-', account: 'ردیف ساختار متفاوت', date: '', desc: x['نمونه'],
+    debit: 0, credit: 0, level: 'high',
+    reason: `ردیف فایل ${x['ردیف فایل']} دارای ${x['تعداد ستون']} ستون است`
+  }));
+  renderAuditTable();
+
+  // Accounts
+  document.getElementById('accountTable').innerHTML = accountTable(ac);
+}
+
+function accountTable(as) {
+  const q = (document.getElementById('accountSearch')?.value || '').toLowerCase();
+  const sort = document.getElementById('accountSort')?.value || 'abs';
+  as = as.filter(x => (x.code + ' ' + x.account).toLowerCase().includes(q));
+  as.sort((a, b) =>
+    sort === 'debit' ? b.debit - a.debit :
+    sort === 'credit' ? b.credit - a.credit :
+    sort === 'code' ? a.code.localeCompare(b.code) :
+    Math.abs(b.net) - Math.abs(a.net)
+  );
+  return table(as.slice(0, 2500), [
+    { label: 'کد معین', key: 'code' },
+    { label: 'نام معین', key: 'account' },
+    { label: 'تعداد ردیف', num: true, val: x => fmt(x.n) },
+    { label: 'بدهکار', num: true, val: x => toman(x.debit) },
+    { label: 'بستانکار', num: true, val: x => toman(x.credit) },
+    { label: 'مانده خالص', num: true, val: x => toman(x.net) }
+  ], { click: x => x.code });
+}
+
+function renderAuditTable() {
+  const q = (document.getElementById('auditSearch')?.value || '').toLowerCase();
+  const s = document.getElementById('severity')?.value || 'all';
+  const a = ISSUES.filter(x =>
+    (s === 'all' || x.level === s) &&
+    ((x.code + ' ' + x.account + ' ' + (x.desc || '') + ' ' + (x.reason || '')).toLowerCase().includes(q))
+  );
+  document.getElementById('auditTable').innerHTML = table(a.slice(0, 2000), [
+    { label: 'سطح', val: x => `<span class="badge ${x.level === 'critical' ? 'red' : x.level === 'high' ? 'amber' : ''}">${x.level === 'critical' ? 'بحرانی' : x.level === 'high' ? 'بالا' : 'متوسط'}</span>` },
+    { label: 'تاریخ', key: 'date' },
+    { label: 'کد', key: 'code' },
+    { label: 'حساب', key: 'account' },
+    { label: 'علت بررسی', key: 'reason' },
+    { label: 'شرح', key: 'desc' },
+    { label: 'بدهکار', num: true, val: x => toman(x.debit) },
+    { label: 'بستانکار', num: true, val: x => toman(x.credit) }
+  ]);
+}
+
+/* ========== Downloads ========== */
+function csvDownload(name, rows) {
+  const cols = [...new Set(rows.flatMap(x => Object.keys(x)))];
+  const csv = '\ufeff' + [cols.map(q => `"${String(q).replace(/"/g, '""')}"`).join(','),
+    ...rows.map(r => cols.map(c => `"${String(r[c] ?? '').replace(/"/g, '""')}"`).join(','))].join('\r\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = name; a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+}
+
+function downloadAudit() {
+  const rows = ISSUES.map(x => ({
+    ...x,
+    'بدهکار (تومان)': Math.round((x.debit || 0) / 10),
+    'بستانکار (تومان)': Math.round((x.credit || 0) / 10)
+  }));
+  if (window.XLSX) {
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), 'موارد ممیزی');
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(window.BAD || []), 'ردیف‌های ساختاری');
+    XLSX.writeFile(wb, 'akhavan_financial_audit_1405.xlsx');
+  } else {
+    csvDownload('akhavan_financial_audit_1405.csv', rows);
+  }
+}
+
+function downloadChecks() {
+  csvDownload('akhavan_checks_review_1405.csv',
+    filtered().filter(x =>
+      /چک|سفته|ضمانت|ابطال|در جریان وصول|اسناد پرداختنی|اسناد دریافتنی/.test(x.account + ' ' + x.generalName + ' ' + x.desc)
+    ).map(x => ({ ...x, debitToman: Math.round(x.debit / 10), creditToman: Math.round(x.credit / 10) }))
+  );
+}
+
+function downloadAccounts() {
+  const a = agg(filtered(), x => x.code + '|' + x.account).map(x => ({
+    کد: x.key.split('|')[0],
+    حساب: x.key.split('|').slice(1).join('|'),
+    تعداد: x.n,
+    بدهکار_تومان: Math.round(x.debit / 10),
+    بستانکار_تومان: Math.round(x.credit / 10),
+    مانده_خالص_تومان: Math.round(x.net / 10)
+  }));
+  csvDownload('akhavan_account_balances_1405.csv', a);
+}
+
+/* ========== Init ========== */
+function initApp() {
+  // Theme
+  const saved = localStorage.getItem('akhavan-theme');
+  if (saved === 'dark' || (!saved && matchMedia('(prefers-color-scheme: dark)').matches)) {
+    document.documentElement.setAttribute('data-theme', 'dark');
+  }
+  document.getElementById('themeBtn').onclick = () => {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    document.documentElement.setAttribute('data-theme', isDark ? 'light' : 'dark');
+    localStorage.setItem('akhavan-theme', isDark ? 'light' : 'dark');
+  };
+
+  // Nav
+  document.querySelectorAll('#nav button').forEach(b => b.onclick = () => goPage(b.dataset.page));
+
+  // Group filter options
+  const groupSel = document.getElementById('groupFilter');
+  [...new Map((CODING || []).map(x => [x['کد گروه'], x['نام گروه']])).entries()]
+    .sort().forEach(([k, v]) => { if (k) groupSel.add(new Option(k + ' · ' + v, k)); });
+
+  // Filter listeners
+  ['fromDate', 'toDate', 'groupFilter', 'rowFilter', 'search'].forEach(id => {
+    document.getElementById(id).addEventListener('input', () => {
+      chartFilterGroup = ''; chartFilterMonth = '';
+      render();
+    });
+  });
+
+  document.getElementById('quick').onchange = e => {
+    const dates = META.months || [];
+    if (e.target.value === 'all') {
+      document.getElementById('fromDate').value = '';
+      document.getElementById('toDate').value = '';
+    } else if (dates.length) {
+      const n = e.target.value === 'm1' ? 1 : e.target.value === 'm3' ? 3 : e.target.value === 'm6' ? 6 : dates.length;
+      document.getElementById('fromDate').value = dates[Math.max(0, dates.length - n)] + '/01';
+      document.getElementById('toDate').value = dates[dates.length - 1] + '/31';
+    }
+    render();
+  };
+
+  document.getElementById('auditSearch').oninput = renderAuditTable;
+  document.getElementById('severity').onchange = renderAuditTable;
+  document.getElementById('accountSearch').oninput = () => {
+    document.getElementById('accountTable').innerHTML = accountTable(
+      agg(filtered(), x => x.code + '|' + x.account).map(a => ({
+        ...a, code: a.key.split('|')[0], account: a.key.split('|').slice(1).join('|')
+      }))
+    );
+  };
+  document.getElementById('accountSort').onchange = () =>
+    document.getElementById('accountSearch').dispatchEvent(new Event('input'));
+
+  render();
+}
+
+// Start
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', boot);
+} else {
+  boot();
+}
+</script>
+</body>
+</html>
